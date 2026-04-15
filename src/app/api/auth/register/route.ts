@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
 
     logger.info("auth.register", { userId: user.id, email: user.email });
 
-    const response = NextResponse.json({ user }, { status: 201 });
+    const response = NextResponse.json({ token, user }, { status: 201 });
     response.cookies.set("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",

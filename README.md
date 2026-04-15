@@ -130,7 +130,9 @@ The seed also creates:
 
 ## 7. API Reference
 
-All endpoints require authentication via the `token` httpOnly cookie (set automatically on login/register).
+All endpoints require authentication via the `token` httpOnly cookie (set automatically by the browser on login/register).
+
+**Testing with Postman:** the login and register responses include the JWT in the body (`"token": "..."`). Copy it and set `Authorization: Bearer <token>` on subsequent requests — the API accepts both the cookie and the header. The token is intentionally not stored by the frontend (the React app uses only the cookie), so returning it in the body does not weaken browser XSS protection.
 
 **Error format:**
 ```json
@@ -153,7 +155,7 @@ All endpoints require authentication via the `token` httpOnly cookie (set automa
 { "name": "Jane Doe", "email": "jane@example.com", "password": "secret123" }
 
 // Response 201
-{ "user": { "id": "uuid", "name": "Jane Doe", "email": "jane@example.com" } }
+{ "token": "<jwt>", "user": { "id": "uuid", "name": "Jane Doe", "email": "jane@example.com" } }
 ```
 
 #### `POST /api/auth/login`
@@ -162,7 +164,7 @@ All endpoints require authentication via the `token` httpOnly cookie (set automa
 { "email": "jane@example.com", "password": "secret123" }
 
 // Response 200
-{ "user": { "id": "uuid", "name": "Jane Doe", "email": "jane@example.com" } }
+{ "token": "<jwt>", "user": { "id": "uuid", "name": "Jane Doe", "email": "jane@example.com" } }
 ```
 
 #### `POST /api/auth/logout`

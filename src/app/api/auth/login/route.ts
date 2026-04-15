@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
     logger.info("auth.login", { userId: user.id, email: user.email });
 
     const response = NextResponse.json({
+      token,
       user: { id: user.id, name: user.name, email: user.email, createdAt: user.createdAt },
     });
     response.cookies.set("token", token, {

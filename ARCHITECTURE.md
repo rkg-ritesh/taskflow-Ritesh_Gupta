@@ -96,6 +96,10 @@ Tokens in localStorage are readable by any JavaScript on the page (XSS vector). 
 
 Tradeoff: Requires `SameSite=lax` to mitigate CSRF. State-changing mutations must be same-origin POST/PATCH/DELETE (they are).
 
+**API client access (Postman):** httpOnly cookies are set automatically by the browser but Postman doesn't share the browser cookie jar. The login and register responses include the JWT in the response body (`{ "token": "...", "user": {...} }`). Copy the token and pass it as `Authorization: Bearer <token>` on subsequent requests. `getCurrentUser` in `src/lib/auth.ts` checks the cookie first, then falls back to the `Authorization` header.
+
+**Is returning the token in the body safe?** The frontend never reads or stores it — the React app relies entirely on the httpOnly cookie. The token field in the response is only consumed by non-browser API clients. Since the frontend ignores it, browser XSS protection is unchanged. This also matches the API contract specified in the assignment brief.
+
 ### TanStack Query instead of Zustand
 Server state (projects, tasks) lives on the server. TanStack Query fetches, caches, and invalidates it without a separate store. Optimistic updates are first-class. Zustand would require manual sync logic.
 
