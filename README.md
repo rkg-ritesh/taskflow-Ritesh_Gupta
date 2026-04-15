@@ -93,6 +93,17 @@ docker compose up --build
 
 App available at **http://localhost:3000**
 
+### Port configuration
+
+Both ports are configurable in `.env` if the defaults conflict with something already running on your machine:
+
+| Variable        | Default | What it controls                                      |
+| --------------- | ------- | ----------------------------------------------------- |
+| `APP_PORT`      | `3000`  | Host port to reach the Next.js app                    |
+| `POSTGRES_PORT` | `5432`  | Host port to reach PostgreSQL (for tests, Prisma CLI) |
+
+The app inside Docker always listens on `3000` internally — `APP_PORT` only affects the host-side binding. Similarly, PostgreSQL always runs on `5432` inside Docker; `POSTGRES_PORT` is only the external mapping. If you change `POSTGRES_PORT`, `DATABASE_URL` in `.env` will pick it up automatically.
+
 The first startup will:
 
 1. Start PostgreSQL and wait until healthy
@@ -357,10 +368,11 @@ Response 204 No Content
 
 ## 8. Running Tests
 
-Integration tests hit a real PostgreSQL database — no mocks.
+Integration tests hit a real PostgreSQL database — no mocks. Tests run **outside Docker** against the exposed PostgreSQL port, so you need local Node.js dependencies installed.
 
 ```bash
-docker compose up -d postgres   # DB must be running
+npm install                      # install deps locally (tests run outside Docker)
+docker compose up -d postgres    # DB must be running
 npm test
 ```
 
