@@ -312,7 +312,28 @@ Response 204 No Content
 
 ---
 
-## 8. What You'd Do With More Time
+## 8. Running Tests
+
+Integration tests hit a real PostgreSQL database — no mocks.
+
+```bash
+docker compose up -d postgres   # DB must be running
+npm test
+```
+
+**The 3 auth tests:**
+
+| Test | Expected |
+|---|---|
+| Register with valid data | 201, user returned, `token` cookie set |
+| Register with duplicate email | 400, `fields.email` validation error |
+| Login with wrong password | 401, `error: "unauthorized"` |
+
+Test users are scoped to `@test.taskflow` emails and cleaned up after each test — seed data is never affected.
+
+---
+
+## 9. What You'd Do With More Time
 
 **Security:**
 - Refresh tokens with rotation (short-lived access + long-lived refresh cookie)
@@ -331,4 +352,4 @@ Response 204 No Content
 **Shortcuts taken:**
 - Pagination is implemented on the API but not rendered in the UI — adding it to the frontend is straightforward with TanStack Query's `keepPreviousData` but was cut for time
 - Dark mode transition is disabled (`disableTransitionOnChange`) to avoid flash — enabling it requires a CSS transition on `html` that doesn't interfere with other transitions
-- No integration tests — the project structure is set up for it (dedicated API route handlers, singleton Prisma client) but the test suite itself was not written
+- Test coverage is limited to the 3 auth integration tests; task and project endpoints follow the same patterns and are the natural next candidates

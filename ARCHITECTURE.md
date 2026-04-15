@@ -4,7 +4,7 @@
 
 | Layer | Technology | Why |
 |---|---|---|
-| Framework | Next.js 14 (App Router) | Full-stack with a single deployment unit. API Routes replace a separate Go server. Server Components enable session reads without client round-trips. |
+| Framework | Next.js (App Router) | Full-stack with a single deployment unit. API Routes replace a separate Go server. Server Components enable session reads without client round-trips. |
 | Language | TypeScript | End-to-end type safety; shared types between API and frontend without a separate codegen step. |
 | Database | PostgreSQL 16 | Relational data with foreign keys, enums, and JSONB if needed later. |
 | ORM + Migrations | Prisma 5 | Schema-first with explicit migration files (SQL diffs in `prisma/migrations/`). Not auto-migrate — `prisma migrate deploy` applies migrations atomically. |
@@ -101,6 +101,27 @@ Server state (projects, tasks) lives on the server. TanStack Query fetches, cach
 
 ---
 
+## Testing
+
+Integration tests live in `src/__tests__/` and run against a real PostgreSQL database — no mocks. The three auth tests cover:
+
+| Test | What it asserts |
+|---|---|
+| Register — happy path | 201, user returned (password excluded), `token` httpOnly cookie set |
+| Register — duplicate email | 400, `fields.email` validation error |
+| Login — wrong password | 401, `error: "unauthorized"` |
+
+**Test isolation:** each test user is created with an `@test.taskflow` email domain. A `afterEach` hook deletes all `@test.taskflow` users via Prisma cascade, so seed data is never touched.
+
+**Jest setup note:** `jose` (JWT library) is ESM-only. `next/jest` sets its own `transformIgnorePatterns` after merging user config, silently overriding it. The config in `jest.config.ts` unwraps the fully-resolved config and re-stamps `transformIgnorePatterns` so SWC transforms `jose` into CommonJS before Jest runs it.
+
+```bash
+docker compose up -d postgres
+npm test
+```
+
+---
+
 ## What Was Intentionally Left Out
 
 | Feature | Reason |
@@ -109,5 +130,4 @@ Server state (projects, tasks) lives on the server. TanStack Query fetches, cach
 | Rate limiting | Would require Redis or a middleware service (e.g., Upstash); out of scope |
 | Email verification | No email infrastructure; not required by the rubric |
 | WebSocket / SSE real-time | Would require a separate server or Next.js custom server; Tanstack Query polling is a reasonable fallback |
-| Test suite | Time-constrained; integration tests for auth are the natural next addition |
 | Pagination UI | API supports `?page=&limit=` but the projects page loads all (reasonable for a project list ≤100 items) |
