@@ -8,20 +8,20 @@ TaskFlow lets users register, log in, create projects, and manage tasks within t
 
 ### Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Framework | Next.js (App Router) — full-stack |
-| Language | TypeScript |
-| Database | PostgreSQL 16 |
-| ORM + Migrations | Prisma 5 |
-| UI Components | shadcn/ui + Tailwind CSS v4 |
-| Auth | JWT (jose) + httpOnly cookies |
-| Server state | TanStack Query v5 |
-| Drag & Drop | @dnd-kit |
-| Dark mode | next-themes |
-| Logging | Winston |
-| Containerization | Docker + Docker Compose |
-| Testing | Jest + jest-environment-node |
+| Layer            | Technology                        |
+| ---------------- | --------------------------------- |
+| Framework        | Next.js (App Router) — full-stack |
+| Language         | TypeScript                        |
+| Database         | PostgreSQL 16                     |
+| ORM + Migrations | Prisma 5                          |
+| UI Components    | shadcn/ui + Tailwind CSS v4       |
+| Auth             | JWT (jose) + httpOnly cookies     |
+| Server state     | TanStack Query v5                 |
+| Drag & Drop      | @dnd-kit                          |
+| Dark mode        | next-themes                       |
+| Logging          | Winston                           |
+| Containerization | Docker + Docker Compose           |
+| Testing          | Jest + jest-environment-node      |
 
 ---
 
@@ -30,11 +30,13 @@ TaskFlow lets users register, log in, create projects, and manage tasks within t
 See [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed reasoning on every major decision.
 
 **Summary:**
+
 - **Next.js full-stack** instead of Go — single deployment unit, shared TypeScript types across API and frontend with zero duplication
 - **Next.js App Router** instead of React Router — file-system routing provides the same navigation patterns with the added benefit of server-side rendering and middleware-level auth without extra configuration
 - **httpOnly cookies** instead of `Authorization: Bearer <token>` — deliberate security tradeoff: httpOnly cookies are inaccessible to JavaScript, eliminating XSS token theft entirely; Bearer tokens require client-side storage (localStorage or memory) which is vulnerable to XSS. The API behaves identically otherwise — the token is verified on every request. The login/register responses also return the token in the body so API clients (Postman, curl) can pass it via `Authorization: Bearer <token>` — the backend accepts both. The React frontend never reads the token from the body and relies entirely on the cookie, so browser XSS protection is unchanged
 - **Responsive design** — layouts tested at 375px (mobile) and 1280px (desktop) using Tailwind's mobile-first breakpoints (`sm:`, `lg:`). No horizontal overflow, no broken grids at either width
 - **Prisma migrations** — generates real SQL diff files; `prisma migrate deploy` applies them atomically; `down.sql` files are included in each migration folder for rollback documentation
+- **Prisma binary targets** — `schema.prisma` declares `binaryTargets = ["native", "linux-musl-openssl-3.0.x", "linux-musl-arm64-openssl-3.0.x"]` so the Docker image bundles query engine binaries for all platforms: macOS (native), Intel/AMD Linux and Windows WSL2 (`linux-musl-openssl-3.0.x`), and Apple Silicon (`linux-musl-arm64-openssl-3.0.x`).
 - **TanStack Query** — optimistic updates for task status changes with automatic rollback on error
 - **@dnd-kit** — lighter, actively maintained drag-and-drop for the kanban board
 
@@ -82,8 +84,8 @@ Task
 **Requirements:** Docker and Docker Compose only.
 
 ```bash
-git clone https://github.com/your-name/taskflow
-cd taskflow
+git clone https://github.com/rkg-ritesh/taskflow-Ritesh_Gupta.git
+cd taskflow-Ritesh_Gupta
 cp .env.example .env
 docker compose up --build
 ```
@@ -91,6 +93,7 @@ docker compose up --build
 App available at **http://localhost:3000**
 
 The first startup will:
+
 1. Start PostgreSQL and wait until healthy
 2. Run `prisma migrate deploy` (applies all migrations)
 3. Run `prisma db seed` (creates test user, project, and tasks)
@@ -103,6 +106,7 @@ The first startup will:
 Migrations run **automatically** on container start via `docker/entrypoint.sh`.
 
 To run manually (requires a running PostgreSQL):
+
 ```bash
 # Apply all pending migrations
 npx prisma migrate deploy
@@ -125,6 +129,7 @@ Password: password123
 ```
 
 The seed also creates:
+
 - 1 project: **Website Redesign**
 - 3 tasks: one in each status (`todo`, `in_progress`, `done`)
 
@@ -137,11 +142,13 @@ All endpoints require authentication via the `token` httpOnly cookie (set automa
 **Testing with Postman:** the login and register responses include the JWT in the body (`"token": "..."`). Copy it and set `Authorization: Bearer <token>` on subsequent requests — the API accepts both the cookie and the header. The token is intentionally not stored by the frontend (the React app uses only the cookie), so returning it in the body does not weaken browser XSS protection.
 
 **Error format:**
+
 ```json
 { "error": "validation failed", "fields": { "email": "is required" } }
 ```
 
 **HTTP status codes:**
+
 - `400` — validation error
 - `401` — not authenticated
 - `403` — authenticated but not authorized
@@ -152,6 +159,7 @@ All endpoints require authentication via the `token` httpOnly cookie (set automa
 ### Auth
 
 #### `POST /api/auth/register`
+
 ```json
 // Request
 { "name": "Jane Doe", "email": "jane@example.com", "password": "secret123" }
@@ -161,6 +169,7 @@ All endpoints require authentication via the `token` httpOnly cookie (set automa
 ```
 
 #### `POST /api/auth/login`
+
 ```json
 // Request
 { "email": "jane@example.com", "password": "secret123" }
@@ -170,12 +179,14 @@ All endpoints require authentication via the `token` httpOnly cookie (set automa
 ```
 
 #### `POST /api/auth/logout`
+
 ```json
 // Response 200
 { "ok": true }
 ```
 
 #### `GET /api/auth/me`
+
 ```json
 // Response 200
 { "user": { "id": "uuid", "name": "Jane Doe", "email": "jane@example.com" } }
@@ -186,6 +197,7 @@ All endpoints require authentication via the `token` httpOnly cookie (set automa
 ### Projects
 
 #### `GET /api/projects?page=1&limit=20`
+
 ```json
 // Response 200
 {
@@ -206,6 +218,7 @@ All endpoints require authentication via the `token` httpOnly cookie (set automa
 ```
 
 #### `POST /api/projects`
+
 ```json
 // Request
 { "name": "New Project", "description": "Optional description" }
@@ -215,6 +228,7 @@ All endpoints require authentication via the `token` httpOnly cookie (set automa
 ```
 
 #### `GET /api/projects/:id`
+
 ```json
 // Response 200
 {
@@ -230,7 +244,11 @@ All endpoints require authentication via the `token` httpOnly cookie (set automa
       "status": "in_progress",
       "priority": "high",
       "assigneeId": "uuid",
-      "assignee": { "id": "uuid", "name": "Jane Doe", "email": "jane@example.com" },
+      "assignee": {
+        "id": "uuid",
+        "name": "Jane Doe",
+        "email": "jane@example.com"
+      },
       "dueDate": "2026-04-15",
       "createdAt": "...",
       "updatedAt": "..."
@@ -240,6 +258,7 @@ All endpoints require authentication via the `token` httpOnly cookie (set automa
 ```
 
 #### `PATCH /api/projects/:id` — owner only
+
 ```json
 // Request
 { "name": "Updated Name", "description": "Updated description" }
@@ -248,18 +267,18 @@ All endpoints require authentication via the `token` httpOnly cookie (set automa
 ```
 
 #### `DELETE /api/projects/:id` — owner only
+
 ```
 Response 204 No Content
 ```
 
 #### `GET /api/projects/:id/stats`
+
 ```json
 // Response 200
 {
   "byStatus": { "todo": 1, "in_progress": 1, "done": 1 },
-  "byAssignee": [
-    { "assigneeId": "uuid", "name": "Jane Doe", "count": 3 }
-  ]
+  "byAssignee": [{ "assigneeId": "uuid", "name": "Jane Doe", "count": 3 }]
 }
 ```
 
@@ -268,10 +287,13 @@ Response 204 No Content
 ### Tasks
 
 #### `GET /api/projects/:id/tasks?status=todo&assignee=uuid&page=1&limit=20`
+
 ```json
 // Response 200
 {
-  "tasks": [ /* task objects */ ],
+  "tasks": [
+    /* task objects */
+  ],
   "total": 5,
   "page": 1,
   "limit": 20
@@ -279,24 +301,39 @@ Response 204 No Content
 ```
 
 #### `POST /api/projects/:id/tasks`
+
 ```json
 // Request
-{ "title": "Design homepage", "description": "...", "priority": "high", "assigneeId": "uuid", "dueDate": "2026-04-15" }
+{
+  "title": "Design homepage",
+  "description": "...",
+  "priority": "high",
+  "assigneeId": "uuid",
+  "dueDate": "2026-04-15"
+}
 
 // Response 201 — returns created task object
 ```
 
 #### `PATCH /api/tasks/:id`
+
 > Project owner can update all fields. Assignee can only update `status`.
 
 ```json
 // Request — all fields optional
-{ "title": "Updated title", "status": "done", "priority": "low", "assigneeId": "uuid", "dueDate": "2026-04-20" }
+{
+  "title": "Updated title",
+  "status": "done",
+  "priority": "low",
+  "assigneeId": "uuid",
+  "dueDate": "2026-04-20"
+}
 
 // Response 200 — returns updated task object
 ```
 
 #### `DELETE /api/tasks/:id` — project owner or task creator only
+
 ```
 Response 204 No Content
 ```
@@ -309,6 +346,7 @@ Response 204 No Content
 ### Users
 
 #### `GET /api/users`
+
 ```json
 // Response 200
 { "users": [{ "id": "uuid", "name": "Jane Doe", "email": "jane@example.com" }] }
@@ -327,11 +365,11 @@ npm test
 
 **The 3 auth tests:**
 
-| Test | Expected |
-|---|---|
-| Register with valid data | 201, user returned, `token` cookie set |
-| Register with duplicate email | 400, `fields.email` validation error |
-| Login with wrong password | 401, `error: "unauthorized"` |
+| Test                          | Expected                               |
+| ----------------------------- | -------------------------------------- |
+| Register with valid data      | 201, user returned, `token` cookie set |
+| Register with duplicate email | 400, `fields.email` validation error   |
+| Login with wrong password     | 401, `error: "unauthorized"`           |
 
 Test users are scoped to `@test.taskflow` emails and cleaned up after each test — seed data is never affected.
 
@@ -340,20 +378,24 @@ Test users are scoped to `@test.taskflow` emails and cleaned up after each test 
 ## 9. What You'd Do With More Time
 
 **Security:**
+
 - Refresh tokens with rotation (short-lived access + long-lived refresh cookie)
 - Rate limiting on auth endpoints (Upstash Redis or similar)
 
 **Product features:**
+
 - Real-time updates via Server-Sent Events or WebSocket
 - Task comments and activity feed
 - Email notifications for assignments
 - User search/invite flow for adding collaborators to projects
 
 **Engineering:**
+
 - Integration test suite for auth and task endpoints (Jest + Supertest or Playwright)
 - Pagination UI on projects and tasks lists (API already supports `?page=&limit=`)
 
 **Shortcuts taken:**
+
 - Task pagination is not implemented — the task view is a drag-and-drop kanban board where paginating would break cross-column dragging; all tasks in a project are loaded at once (acceptable for typical project sizes)
 - Dark mode transition is disabled (`disableTransitionOnChange`) to avoid flash — enabling it requires a CSS transition on `html` that doesn't interfere with other transitions
 - Test coverage is limited to the 3 auth integration tests; task and project endpoints follow the same patterns and are the natural next candidates
