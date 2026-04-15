@@ -81,7 +81,8 @@ Task
 
 ## 4. Running Locally
 
-**Requirements:** Docker and Docker Compose only.
+**Requirements:** Docker and **Docker Compose V2** (`docker compose`, not `docker-compose`).
+Docker Compose V1 (1.29.x) is not supported — it has a known incompatibility with modern Docker image formats.
 
 ```bash
 git clone https://github.com/rkg-ritesh/taskflow-Ritesh_Gupta.git
