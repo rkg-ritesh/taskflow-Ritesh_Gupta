@@ -19,7 +19,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     select: { id: true, name: true, email: true, createdAt: true },
   });
 
-  if (!user) redirect("/login");
+  if (!user) redirect("/api/auth/clear-session");
 
   const userPublic: UserPublic = {
     ...user,
