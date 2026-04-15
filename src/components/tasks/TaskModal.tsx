@@ -188,7 +188,13 @@ export function TaskModal({ open, onOpenChange, projectId, members, task }: Task
                       value={field.value ?? "unassigned"}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Assign to..." />
+                        <SelectValue placeholder="Assign to...">
+                          {field.value && field.value !== "unassigned"
+                            ? (assignees.find((m) => m.id === field.value)?.name ?? "Assign to...")
+                            : field.value === "unassigned"
+                            ? "Unassigned"
+                            : undefined}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="unassigned">Unassigned</SelectItem>
