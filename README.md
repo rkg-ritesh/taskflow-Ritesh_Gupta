@@ -21,6 +21,7 @@ TaskFlow lets users register, log in, create projects, and manage tasks within t
 | Dark mode | next-themes |
 | Logging | Winston |
 | Containerization | Docker + Docker Compose |
+| Testing | Jest + jest-environment-node |
 
 ---
 
@@ -31,7 +32,7 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed reasoning on every major d
 **Summary:**
 - **Next.js full-stack** instead of Go — single deployment unit, shared TypeScript types across API and frontend with zero duplication
 - **Next.js App Router** instead of React Router — file-system routing provides the same navigation patterns with the added benefit of server-side rendering and middleware-level auth without extra configuration
-- **httpOnly cookies** instead of `Authorization: Bearer <token>` — deliberate security tradeoff: httpOnly cookies are inaccessible to JavaScript, eliminating XSS token theft entirely; Bearer tokens require client-side storage (localStorage or memory) which is vulnerable to XSS. The API behaves identically otherwise — the token is verified on every request
+- **httpOnly cookies** instead of `Authorization: Bearer <token>` — deliberate security tradeoff: httpOnly cookies are inaccessible to JavaScript, eliminating XSS token theft entirely; Bearer tokens require client-side storage (localStorage or memory) which is vulnerable to XSS. The API behaves identically otherwise — the token is verified on every request. The login/register responses also return the token in the body so API clients (Postman, curl) can pass it via `Authorization: Bearer <token>` — the backend accepts both. The React frontend never reads the token from the body and relies entirely on the cookie, so browser XSS protection is unchanged
 - **Prisma migrations** — generates real SQL diff files; `prisma migrate deploy` applies them atomically; `down.sql` files are included in each migration folder for rollback documentation
 - **TanStack Query** — optimistic updates for task status changes with automatic rollback on error
 - **@dnd-kit** — lighter, actively maintained drag-and-drop for the kanban board
@@ -352,6 +353,6 @@ Test users are scoped to `@test.taskflow` emails and cleaned up after each test 
 - Pagination UI on projects and tasks lists (API already supports `?page=&limit=`)
 
 **Shortcuts taken:**
-- Pagination is implemented on the API but not rendered in the UI — adding it to the frontend is straightforward with TanStack Query's `keepPreviousData` but was cut for time
+- Task pagination is not implemented — the task view is a drag-and-drop kanban board where paginating would break cross-column dragging; all tasks in a project are loaded at once (acceptable for typical project sizes)
 - Dark mode transition is disabled (`disableTransitionOnChange`) to avoid flash — enabling it requires a CSS transition on `html` that doesn't interfere with other transitions
 - Test coverage is limited to the 3 auth integration tests; task and project endpoints follow the same patterns and are the natural next candidates

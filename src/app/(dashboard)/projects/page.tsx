@@ -3,6 +3,7 @@
 import { useProjects } from "@/hooks/useProjects";
 import { ProjectCard } from "@/components/projects/ProjectCard";
 import { CreateProjectModal } from "@/components/projects/CreateProjectModal";
+import { Pagination } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FolderOpen } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -10,7 +11,6 @@ import { useEffect, useState } from "react";
 function useCurrentUserId() {
   const [userId, setUserId] = useState<string | null>(null);
   useEffect(() => {
-    // Get user from the cookie-decoded token by hitting a lightweight endpoint
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((d) => setUserId(d.user?.id ?? null))
@@ -20,8 +20,12 @@ function useCurrentUserId() {
 }
 
 export default function ProjectsPage() {
-  const { data: projects, isLoading, error } = useProjects();
+  const [page, setPage] = useState(1);
+  const { data, isLoading, error } = useProjects(page);
   const currentUserId = useCurrentUserId();
+
+  const projects = data?.projects;
+  const pagination = data?.pagination;
 
   return (
     <div className="space-y-6">
@@ -32,7 +36,7 @@ export default function ProjectsPage() {
             Projects you own or collaborate on
           </p>
         </div>
-        <CreateProjectModal />
+        <CreateProjectModal onCreated={() => setPage(1)} />
       </div>
 
       {isLoading && (
@@ -60,16 +64,25 @@ export default function ProjectsPage() {
               Create your first project to get started
             </p>
           </div>
-          <CreateProjectModal />
+          <CreateProjectModal onCreated={() => setPage(1)} />
         </div>
       )}
 
       {!isLoading && projects && projects.length > 0 && currentUserId && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {projects.map((project) => (
-            <ProjectCard key={project.id} project={project} currentUserId={currentUserId} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {projects.map((project) => (
+              <ProjectCard key={project.id} project={project} currentUserId={currentUserId} />
+            ))}
+          </div>
+          {pagination && (
+            <Pagination
+              page={pagination.page}
+              totalPages={pagination.totalPages}
+              onPageChange={setPage}
+            />
+          )}
+        </>
       )}
     </div>
   );

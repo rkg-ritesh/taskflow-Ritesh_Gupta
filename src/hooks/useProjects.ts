@@ -1,6 +1,8 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { Project } from "@/types";
+
+type Pagination = { page: number; limit: number; total: number; totalPages: number };
 
 async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, {
@@ -14,11 +16,14 @@ async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
   return res.json();
 }
 
-export function useProjects() {
+export function useProjects(page = 1) {
   return useQuery({
-    queryKey: ["projects"],
+    queryKey: ["projects", page],
     queryFn: () =>
-      apiFetch<{ projects: Project[] }>("/api/projects").then((d) => d.projects),
+      apiFetch<{ projects: Project[]; pagination: Pagination }>(
+        `/api/projects?page=${page}&limit=9`
+      ),
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -31,7 +36,7 @@ export function useCreateProject() {
         body: JSON.stringify(data),
       }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["projects"] });
+      qc.invalidateQueries({ queryKey: ["projects"], exact: false });
       toast.success("Project created");
     },
     onError: (err: Error) => toast.error(err.message),
@@ -44,7 +49,7 @@ export function useDeleteProject() {
     mutationFn: (projectId: string) =>
       fetch(`/api/projects/${projectId}`, { method: "DELETE" }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["projects"] });
+      qc.invalidateQueries({ queryKey: ["projects"], exact: false });
       toast.success("Project deleted");
     },
     onError: () => toast.error("Failed to delete project"),
@@ -60,7 +65,7 @@ export function useUpdateProject() {
         body: JSON.stringify(data),
       }),
     onSuccess: (_, { id }) => {
-      qc.invalidateQueries({ queryKey: ["projects"] });
+      qc.invalidateQueries({ queryKey: ["projects"], exact: false });
       qc.invalidateQueries({ queryKey: ["project", id] });
       toast.success("Project updated");
     },

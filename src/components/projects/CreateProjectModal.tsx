@@ -18,7 +18,7 @@ import { useCreateProject } from "@/hooks/useProjects";
 import { CreateProjectSchema, type CreateProjectInput } from "@/lib/validations/project";
 import { Plus, Loader2 } from "lucide-react";
 
-export function CreateProjectModal() {
+export function CreateProjectModal({ onCreated }: { onCreated?: () => void } = {}) {
   const [open, setOpen] = useState(false);
   const { mutateAsync, isPending } = useCreateProject();
   const {
@@ -32,6 +32,7 @@ export function CreateProjectModal() {
     await mutateAsync(data);
     reset();
     setOpen(false);
+    onCreated?.();
   }
 
   return (
